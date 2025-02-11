@@ -23,9 +23,9 @@ class DatabaseSeeder extends Seeder
 
          // Daftar permissions
          $permissions = [
-             'permission.view', 'permission.insert', 'permission.update', 'permission.delete',
-             'role.view', 'role.insert', 'role.update', 'role.delete',
-             'user.view', 'user.insert', 'user.update', 'user.delete',
+             'permission.view', 'permission.create', 'permission.edit', 'permission.delete',
+             'role.view', 'role.create', 'role.edit', 'role.delete',
+             'user.view', 'user.create', 'user.edit', 'user.delete',
          ];
  
          // Buat permissions dengan guard
