@@ -2,37 +2,42 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\ContactCategoryResource\Pages;
+use App\Filament\Resources\ContactCategoryResource\RelationManagers;
+use App\Models\ContactCategory;
 use Filament\Forms;
-use Filament\Tables;
-use App\Models\Contact;
 use Filament\Forms\Form;
-use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Select;
+use Filament\Tables;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\ContactResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\ContactResource\RelationManagers;
 
-class ContactResource extends Resource
+class ContactCategoryResource extends Resource
 {
-    protected static ?string $model = Contact::class;
+    protected static ?string $model = ContactCategory::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-at-symbol';
 
-    protected static ?string $navigationGroup = 'Manage';
-    protected static ?int $navigationSort = 1002;
+    protected static ?string $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 9003;
+    public static function getModelLabel(): string
+    {
+        return 'Contact Category'; // Label untuk satu item
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'Contact Categories'; // Label untuk banyak item
+    }
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Select::make('contact_type_id')
-                    ->required()
-                    ->relationship('contactcategory', 'name'),
-                Forms\Components\TextInput::make('contact_account')
+                Forms\Components\TextInput::make('name')
                     ->required(),
-                Forms\Components\TextInput::make('contact_name')
-                    ->required(),
+                Forms\Components\Textarea::make('description')
+                    ->columnSpanFull(),
                 // Forms\Components\TextInput::make('created_by')
                 //     ->required()
                 //     ->numeric(),
@@ -45,12 +50,9 @@ class ContactResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('contactcategory.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('contact_account')
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('contact_name')
+                Tables\Columns\TextColumn::make('description')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -92,9 +94,9 @@ class ContactResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListContacts::route('/'),
-            'create' => Pages\CreateContact::route('/create'),
-            'edit' => Pages\EditContact::route('/{record}/edit'),
+            'index' => Pages\ListContactCategories::route('/'),
+            'create' => Pages\CreateContactCategory::route('/create'),
+            'edit' => Pages\EditContactCategory::route('/{record}/edit'),
         ];
     }
 }

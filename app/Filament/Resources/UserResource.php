@@ -25,6 +25,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
     protected static ?string $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 9001;
 
     public static function canViewAny(): bool
     {

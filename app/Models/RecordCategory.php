@@ -9,6 +9,6 @@ class RecordCategory extends Model
 {
     //
     use HasFactory;
-
+    
     protected $fillable = ['name','description', 'created_by', 'updated_by'];
 }

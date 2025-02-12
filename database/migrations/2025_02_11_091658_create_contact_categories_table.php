@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up() {
-        Schema::create('contact_types', function (Blueprint $table) {
+        Schema::create('contact_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name', 50)->unique();
             $table->text('description')->nullable();
@@ -17,6 +17,6 @@ return new class extends Migration {
     }
 
     public function down() {
-        Schema::dropIfExists('contact_types');
+        Schema::dropIfExists('contact_categories');
     }
 };

@@ -17,8 +17,10 @@ class RecordcategoryResource extends Resource
 {
     protected static ?string $model = Recordcategory::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Manage';
+    protected static ?string $navigationIcon = 'heroicon-o-folder';
+
+    protected static ?string $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 9002;
     public static function getModelLabel(): string
     {
         return 'Record Category'; // Label untuk satu item
