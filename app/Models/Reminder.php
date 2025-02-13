@@ -29,5 +29,11 @@ class Reminder extends Model
         return $this->belongsTo(RecordCategory::class, 'record_category_id');
     }
 
+    public function recipients()
+    {
+        return $this->hasMany(ReminderRecipient::class,'contact_id');
+    }
+
+
     
 }

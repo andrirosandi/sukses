@@ -26,12 +26,12 @@ class ContactResource extends Resource
     {
         return $form
             ->schema([
-                Select::make('contact_type_id')
+                Select::make('contact_category_id')
                     ->required()
                     ->relationship('contactcategory', 'name'),
-                Forms\Components\TextInput::make('contact_account')
+                Forms\Components\TextInput::make('account')
                     ->required(),
-                Forms\Components\TextInput::make('contact_name')
+                Forms\Components\TextInput::make('name')
                     ->required(),
                 // Forms\Components\TextInput::make('created_by')
                 //     ->required()
@@ -48,9 +48,9 @@ class ContactResource extends Resource
                 Tables\Columns\TextColumn::make('contactcategory.name')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('contact_account')
+                Tables\Columns\TextColumn::make('account')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('contact_name')
+                Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

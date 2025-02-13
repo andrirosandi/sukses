@@ -11,9 +11,10 @@ class Contact extends Model
     //
     use HasFactory;
 
-    protected $fillable = ['contact_type_id', 'contact_account', 'contact_name', 'created_by', 'updated_by'];
+    protected $fillable = ['contact_category_id', 'account', 'name', 'created_by', 'updated_by'];
 
     public function contactCategory() {
         return $this->belongsTo(ContactCategory::class);
     }
+    
 }

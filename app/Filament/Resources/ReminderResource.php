@@ -5,11 +5,13 @@ namespace App\Filament\Resources;
 //use Log;
 use Filament\Forms;
 use Filament\Tables;
+use App\Models\Contact;
 use App\Models\Reminder;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\RecordCategory;
 use Filament\Resources\Resource;
+use App\Models\ReminderRecipient;
 use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -24,6 +26,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\ReminderResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\ReminderResource\RelationManagers;
+use App\Filament\Resources\ReminderRecipientRelationManagerResource\RelationManagers\RecipientsRelationManager;
 
 class ReminderResource extends Resource
 {
@@ -48,25 +51,25 @@ class ReminderResource extends Resource
                 Forms\Components\Select::make('record_category_id')
                     ->relationship('recordCategory', 'name')
                     ->reactive() // Agar memicu perubahan pada helperText
-                    ->afterStateUpdated(function ($state, callable $set)  {
+                    ->afterStateUpdated(function ($state, callable $set) {
                         $set('available_variables', RecordCategory::getTableColumns($state));
-                        $set('reference_date', RecordCategory::getTableColumns($state,['date','datetime']));
+                        $set('reference_date', RecordCategory::getTableColumns($state, ['date', 'datetime']));
                     })
-                    ->afterStateHydrated(function ($state, callable $set)  {
+                    ->afterStateHydrated(function ($state, callable $set) {
                         $set('available_variables', RecordCategory::getTableColumns($state));
-                        $set('reference_date', RecordCategory::getTableColumns($state,['date','datetime']));
+                        $set('reference_date', RecordCategory::getTableColumns($state, ['date', 'datetime']));
                     })
                     ->live()
-                    
+
                     ->required(),
                 Select::make('reference_date_column')
                     ->label('Reference Date')
                     // ->options(fn ($get) => self::getReferenceDateOptions(explode(':', $get('ref'))[0] ?? ''))
-                    ->options(fn ($get) => $get('reference_date'))
+                    ->options(fn($get) => $get('reference_date'))
                     ->searchable()
                     ->required(),
-                
-                
+
+
                 Forms\Components\Select::make('repeat_every')
                     ->options([
                         '1y' => 'Year',
@@ -82,13 +85,53 @@ class ReminderResource extends Resource
                     ->required(),
                 Forms\Components\Textarea::make('reminder_message')
                     ->columnSpanFull()
-                    ->helperText(fn ($get) => 
-                        "Available variables: " . implode(", ", array_map(fn ($col) => "{" . $col . "}", $get('available_variables') ?? []))
+                    ->helperText(
+                        fn($get) =>
+                        "Available variables: " . implode(", ", array_map(fn($col) => "{" . $col . "}", $get('available_variables') ?? []))
                     )
-                    ->default(fn ($get) => RecordCategory::getTableColumns($get('record_category_id'))),
-                        Forms\Components\Toggle::make('enabled')
+                    ->default(fn($get) => RecordCategory::getTableColumns($get('record_category_id'))),
+                Forms\Components\Toggle::make('enabled')
                     ->required(),
+
+
+    //                 Forms\Components\Repeater::make('contacts')
+    // ->relationship('recipients') // Hubungkan ke tabel pivot
+    // ->schema([
+    //     Select::make('id')
+    //         ->label('Pilih Kontak')
+    //         ->options(Contact::pluck('name', 'id'))
+    //         ->searchable()
+    //         ->required(),
+    // ])
+    // ->addable(true) // Bisa tambah kontak baru
+    // ->deletable(true) // 
+    // ,
+
+                Select::make('contact_id')
+                    ->label('Contact')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->options(Contact::pluck('name', 'id'))
+                    ->dehydrated(false) // Tambahkan ini
+                    ->default(fn ($record) => $record ? $record->recipients()->pluck('contact_id')->toArray() : []) 
+                    ->afterStateUpdated(function ($state, $set, $record) {
+                        if ($record) {
+                            // Hapus semua data lama untuk reminder ini
+                            ReminderRecipient::where('reminder_id', $record->id)->delete();
+
+                            // Simpan data baru ke pivot
+                            foreach ($state as $contactId) {
+                                ReminderRecipient::create([
+                                    'reminder_id' => $record->id,
+                                    'contact_id' => $contactId,
+                                ]);
+                            }
+                        }
+                    })
+
                 
+
             ]);
     }
 
@@ -140,12 +183,8 @@ class ReminderResource extends Resource
             ]);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
+
+
 
     public static function getPages(): array
     {
@@ -155,20 +194,4 @@ class ReminderResource extends Resource
             'edit' => Pages\EditReminder::route('/{record}/edit'),
         ];
     }
-
-    public static function getReferenceDateOptions(string $tableName): array
-    {
-        $columns = Schema::getColumnListing($tableName);
-        $excludedColumns = ['id', 'created_at', 'updated_at'];
-
-        return collect($columns)
-            ->reject(fn ($col) => in_array($col, $excludedColumns)) // Hilangkan kolom yang tidak relevan
-            ->filter(fn ($col) => in_array(Schema::getColumnType($tableName, $col), ['date', 'datetime'])) // Hanya ambil date/datetime
-            ->mapWithKeys(fn ($col) => [$col => ucfirst(str_replace('_', ' ', $col))]) // Format label dropdown
-            ->toArray();
-    }
-
-    
-
-
 }
