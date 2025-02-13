@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\RecordCategory;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Facades\Schema;
@@ -47,14 +48,22 @@ class ReminderResource extends Resource
                 Forms\Components\Select::make('record_category_id')
                     ->relationship('recordCategory', 'name')
                     ->reactive() // Agar memicu perubahan pada helperText
-                    ->afterStateUpdated(fn ($state, callable $set) => 
-                        $set('available_variables', static::getTableColumns($state))
-                    )
-                    ->afterStateHydrated(fn ($state, callable $set) => 
-                        $set('available_variables', static::getTableColumns($state))
-                    )
+                    ->afterStateUpdated(function ($state, callable $set)  {
+                        $set('available_variables', RecordCategory::getTableColumns($state));
+                        $set('reference_date', RecordCategory::getTableColumns($state,['date','datetime']));
+                    })
+                    ->afterStateHydrated(function ($state, callable $set)  {
+                        $set('available_variables', RecordCategory::getTableColumns($state));
+                        $set('reference_date', RecordCategory::getTableColumns($state,['date','datetime']));
+                    })
                     ->live()
                     
+                    ->required(),
+                Select::make('reference_date_column')
+                    ->label('Reference Date')
+                    // ->options(fn ($get) => self::getReferenceDateOptions(explode(':', $get('ref'))[0] ?? ''))
+                    ->options(fn ($get) => $get('reference_date'))
+                    ->searchable()
                     ->required(),
                 
                 
@@ -65,19 +74,19 @@ class ReminderResource extends Resource
                     ])
                     ->required(),
                 Forms\Components\TextInput::make('on_days')
-                ->helperText('Enter the days before the event when the reminder should be triggered. 
-    Use a comma-separated list of negative numbers, e.g., "-1, -2, 0".
-    means 1 day before the event. 2 days before the event and the same day as the event.')
+                    ->helperText('Enter the days before the event when the reminder should be triggered. 
+                        Use a comma-separated list of negative numbers, e.g., "-1, -2, 0".
+                        means 1 day before the event. 2 days before the event and the same day as the event.')
                     ->required(),
                 Forms\Components\TimePicker::make('on_time')
                     ->required(),
-                    Forms\Components\Textarea::make('reminder_message')
+                Forms\Components\Textarea::make('reminder_message')
                     ->columnSpanFull()
-                        ->helperText(fn ($get) => 
-                    "Available variables: " . implode(", ", array_map(fn ($col) => "{" . $col . "}", $get('available_variables') ?? []))
-                )
-                ->default(fn ($get) => static::getTableColumns($get('record_category_id'))),
-                Forms\Components\Toggle::make('enabled')
+                    ->helperText(fn ($get) => 
+                        "Available variables: " . implode(", ", array_map(fn ($col) => "{" . $col . "}", $get('available_variables') ?? []))
+                    )
+                    ->default(fn ($get) => RecordCategory::getTableColumns($get('record_category_id'))),
+                        Forms\Components\Toggle::make('enabled')
                     ->required(),
                 
             ]);
@@ -92,6 +101,9 @@ class ReminderResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('recordCategory.name')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('reference_date_column')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('repeat_every')
@@ -143,84 +155,20 @@ class ReminderResource extends Resource
             'edit' => Pages\EditReminder::route('/{record}/edit'),
         ];
     }
-    public static function getTableColumns(?int $recordCategoryId): array
-{
-    if (!$recordCategoryId) {
-        \Log::error("record_category_id is null");
-        return [];
-    }
 
-    $recordCategory = RecordCategory::find($recordCategoryId);
-    if (!$recordCategory || !$recordCategory->name) {
-        \Log::error("RecordCategory tidak ditemukan untuk ID: " . $recordCategoryId);
-        return [];
-    }
-
-    $modelClassName = "App\\Models\\" . $recordCategory->name;
-    if (!class_exists($modelClassName)) {
-        \Log::error("Model class tidak ditemukan: " . $modelClassName);
-        return [];
-    }
-
-    if (!$recordCategoryId) {
-        return [];
-    }
-
-    $recordCategory = RecordCategory::find($recordCategoryId);
-    if (!$recordCategory || !$recordCategory->name) {
-        return [];
-    }
-
-    $modelClassName = "App\\Models\\" . $recordCategory->name;
-
-    if (!class_exists($modelClassName)) {
-        \Log::error('Model class does not exist', ['class' => $modelClassName]);
-        return [];
-    }
-
-    $modelInstance = app($modelClassName);
-
-    if (!$modelInstance instanceof Model) {
-        \Log::error('Model instance is not a valid Eloquent model', ['class' => $modelClassName]);
-        return [];
-    }
-
-    try {
-        $tableName = $modelInstance->getTable();
-        if (!Schema::hasTable($tableName)) {
-            \Log::error('Table does not exist in the database', ['table' => $tableName]);
-            return [];
-        }
-
+    public static function getReferenceDateOptions(string $tableName): array
+    {
         $columns = Schema::getColumnListing($tableName);
         $excludedColumns = ['id', 'created_at', 'updated_at'];
-        $availableColumns = array_diff($columns, $excludedColumns);
 
-        $formattedColumns = [];
-
-        foreach ($availableColumns as $col) {
-            // Jika ada kolom foreign key (_id), ganti dengan nama relasi
-            if (str_ends_with($col, '_id')) {
-                $relationName = str_replace('_id', '', $col);
-                $relationMethod = \Str::camel($relationName); // misalnya vehicleCategory
-
-                if (method_exists($modelInstance, $relationMethod)) {
-                    $formattedColumns[$col] = "{$relationMethod}.name"; // Jadi vehicleCategory.name
-                } else {
-                    $formattedColumns[$col] = $col; // Tetap ID jika tidak ada relasi
-                }
-            } else {
-                $formattedColumns[$col] = $col;
-            }
-        }
-
-        \Log::info('Available columns with relations', ['columns' => $formattedColumns]);
-
-        return $formattedColumns;
-    } catch (\Exception $e) {
-        \Log::error('Error fetching table columns', ['error' => $e->getMessage()]);
-        return [];
+        return collect($columns)
+            ->reject(fn ($col) => in_array($col, $excludedColumns)) // Hilangkan kolom yang tidak relevan
+            ->filter(fn ($col) => in_array(Schema::getColumnType($tableName, $col), ['date', 'datetime'])) // Hanya ambil date/datetime
+            ->mapWithKeys(fn ($col) => [$col => ucfirst(str_replace('_', ' ', $col))]) // Format label dropdown
+            ->toArray();
     }
-}
+
+    
+
 
 }

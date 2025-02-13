@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->text('reminder_message')->nullable();
             $table->foreignId('record_category_id')->constrained('record_categories');
+            $table->string('reference_date_column')->nullable();
             $table->boolean('enabled')->default(1);
             $table->string('repeat_every', 50);
             $table->string('on_days');
