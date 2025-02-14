@@ -8,13 +8,11 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\MessageProvider;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Crypt;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\MessageProviderResource\Pages;
-use App\Filament\Resources\MessageProviderResource\RelationManagers;
 
 class MessageProviderResource extends Resource
 {
@@ -22,7 +20,6 @@ class MessageProviderResource extends Resource
     protected static ?string $navigationGroup = 'System Settings';
     protected static ?string $navigationIcon = 'heroicon-o-cog';
     protected static ?int $navigationSort = 9002;
-    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
@@ -33,24 +30,22 @@ class MessageProviderResource extends Resource
                     ->unique()
                     ->columnSpanFull(),
 
-                    Repeater::make('config')
-    ->label('Configuration')
-    ->schema([
-        Grid::make(2)->schema([
-            TextInput::make('key')
-                ->label('Key')
-                ->required(),
-            TextInput::make('value')
-                ->label('Value')
-                ->required(),
-        ]),
-    ])
-    ->addable(true)
-    ->deletable(true)
-    ->reorderable(true)
-    ->columnSpanFull(),
-
-                
+                Repeater::make('config')
+                    ->label('Configuration')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            TextInput::make('key')
+                                ->label('Key')
+                                ->required(),
+                            TextInput::make('value')
+                                ->label('Value')
+                                ->required(),
+                        ]),
+                    ])
+                    ->addable(true)
+                    ->deletable(true)
+                    ->reorderable(true)
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -69,9 +64,7 @@ class MessageProviderResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
@@ -84,9 +77,7 @@ class MessageProviderResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
