@@ -2,37 +2,55 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\VehicleCategoryResource\Pages;
-use App\Filament\Resources\VehicleCategoryResource\RelationManagers;
-use App\Models\VehicleCategory;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\MessageProvider;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\MessageProviderResource\Pages;
+use App\Filament\Resources\MessageProviderResource\RelationManagers;
 
-class VehicleCategoryResource extends Resource
+class MessageProviderResource extends Resource
 {
-    protected static ?string $model = VehicleCategory::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
-    protected static ?string $navigationGroup = 'Master Data';
-    protected static ?int $navigationSort = 8004;
+    protected static ?string $model = MessageProvider::class;
+    protected static ?string $navigationGroup = 'System Settings';
+    protected static ?string $navigationIcon = 'heroicon-o-cog';
+    protected static ?int $navigationSort = 9002;
+    // protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
-                    ->required(),
-                Forms\Components\Textarea::make('description')
+                    ->required()
+                    ->unique()
                     ->columnSpanFull(),
-                // Forms\Components\TextInput::make('created_by')
-                //     ->numeric(),
-                // Forms\Components\TextInput::make('updated_by')
-                //     ->numeric(),
+
+                    Repeater::make('config')
+    ->label('Configuration')
+    ->schema([
+        Grid::make(2)->schema([
+            TextInput::make('key')
+                ->label('Key')
+                ->required(),
+            TextInput::make('value')
+                ->label('Value')
+                ->required(),
+        ]),
+    ])
+    ->addable(true)
+    ->deletable(true)
+    ->reorderable(true)
+    ->columnSpanFull(),
+
+                
             ]);
     }
 
@@ -42,22 +60,12 @@ class VehicleCategoryResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('description')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('created_by')
-                    ->numeric()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_by')
-                    ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -84,9 +92,9 @@ class VehicleCategoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListVehicleCategories::route('/'),
-            'create' => Pages\CreateVehicleCategory::route('/create'),
-            'edit' => Pages\EditVehicleCategory::route('/{record}/edit'),
+            'index' => Pages\ListMessageProviders::route('/'),
+            'create' => Pages\CreateMessageProvider::route('/create'),
+            'edit' => Pages\EditMessageProvider::route('/{record}/edit'),
         ];
     }
 }

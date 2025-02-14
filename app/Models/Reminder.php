@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Reminder extends Model
 {
@@ -31,7 +32,11 @@ class Reminder extends Model
 
     public function recipients()
     {
-        return $this->hasMany(ReminderRecipient::class,'contact_id');
+        return $this->hasMany(ReminderRecipient::class,'reminder_id');
+    }
+
+    public function contacts() : BelongsToMany {
+        return $this->belongsToMany(Contact::class,'reminder_recipients');
     }
 
 

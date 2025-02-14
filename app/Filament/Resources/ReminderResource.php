@@ -13,6 +13,7 @@ use App\Models\RecordCategory;
 use Filament\Resources\Resource;
 use App\Models\ReminderRecipient;
 use Illuminate\Support\Facades\DB;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Facades\Schema;
@@ -33,7 +34,7 @@ class ReminderResource extends Resource
     protected static ?string $model = Reminder::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
-    protected static ?string $navigationGroup = 'Manage';
+    protected static ?string $navigationGroup = 'Operations';
     protected static ?int $navigationSort = 1002;
     public static function form(Form $form): Form
     {
@@ -90,49 +91,58 @@ class ReminderResource extends Resource
                         "Available variables: " . implode(", ", array_map(fn($col) => "{" . $col . "}", $get('available_variables') ?? []))
                     )
                     ->default(fn($get) => RecordCategory::getTableColumns($get('record_category_id'))),
-                Forms\Components\Toggle::make('enabled')
-                    ->required(),
-
-
-    //                 Forms\Components\Repeater::make('contacts')
-    // ->relationship('recipients') // Hubungkan ke tabel pivot
-    // ->schema([
-    //     Select::make('id')
-    //         ->label('Pilih Kontak')
-    //         ->options(Contact::pluck('name', 'id'))
-    //         ->searchable()
-    //         ->required(),
-    // ])
-    // ->addable(true) // Bisa tambah kontak baru
-    // ->deletable(true) // 
-    // ,
-
-                Select::make('contact_id')
-                    ->label('Contact')
+                Select::make('recipient')
+                    ->label('Recipients')
                     ->multiple()
                     ->searchable()
                     ->preload()
-                    ->options(Contact::pluck('name', 'id'))
+                    ->options(
+                        Contact::with('contactCategory')->get()->mapWithKeys(function ($contact) {
+                            // dump($contact);
+                            return [$contact->id => "{$contact->name} - {$contact->account} ({$contact->contactCategory->name})"];
+                        })->toArray()
+                    )
                     ->dehydrated(false) // Tambahkan ini
-                    ->default(fn ($record) => $record ? $record->recipients()->pluck('contact_id')->toArray() : []) 
-                    ->afterStateUpdated(function ($state, $set, $record) {
-                        if ($record) {
-                            // Hapus semua data lama untuk reminder ini
-                            ReminderRecipient::where('reminder_id', $record->id)->delete();
-
-                            // Simpan data baru ke pivot
-                            foreach ($state as $contactId) {
-                                ReminderRecipient::create([
-                                    'reminder_id' => $record->id,
-                                    'contact_id' => $contactId,
-                                ]);
-                            }
+                    // ->relationship('contacts','name')
+                    ->columnSpanFull()
+                    ->afterStateHydrated(function ($state, callable $set, $livewire) {
+                        // Ambil ID dari relasi recipients dan set ke state
+                        if ($livewire->record) {
+                            # code...
+                            $set('recipient', $livewire->record->contacts->pluck('id')->toArray());
                         }
                     })
+                    ,
+                    Forms\Components\Toggle::make('enabled')
+                    ->required(),
+                    Forms\Components\Repeater::make('config')
+    ->label('Configuration')
+    ->schema([
+        Grid::make(2) // 2 kolom: Key | Value
+            ->schema([
+                TextInput::make('key')
+                    ->label('Key')
+                    ->required()
+                    ->columnSpan(1),
+
+                TextInput::make('value')
+                    ->label('Value')
+                    ->required()
+                    ->columnSpan(1),
+            ]),
+    ])
+    ->addable(true)
+    ->deletable(true)
+    ->reorderable(true)
+    ->columnSpanFull(),
+
+                    
+    
 
                 
 
             ]);
+            
     }
 
     public static function table(Table $table): Table
@@ -194,4 +204,10 @@ class ReminderResource extends Resource
             'edit' => Pages\EditReminder::route('/{record}/edit'),
         ];
     }
+    // protected static function mutateFormDataBeforeFill(array $data): array
+    // {
+    //     // $data['recipient'] = Reminder::find($data['id'])?->contacts()->pluck('id')->toArray();
+    //     dump($data);
+    //     return $data;
+    // }
 }

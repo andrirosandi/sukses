@@ -24,7 +24,7 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $navigationGroup = 'System Settings';
     protected static ?int $navigationSort = 9001;
 
     public static function canViewAny(): bool
@@ -136,4 +136,5 @@ class UserResource extends Resource
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
+    
 }

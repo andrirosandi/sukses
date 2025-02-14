@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\ContactCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Contact extends Model
 {
@@ -15,6 +16,10 @@ class Contact extends Model
 
     public function contactCategory() {
         return $this->belongsTo(ContactCategory::class);
+    }
+
+    public function reminders() : BelongsToMany {
+        return $this->belongsToMany(Reminder::class,'reminder_recipients');
     }
     
 }

@@ -18,7 +18,7 @@ class VehicleResource extends Resource
     protected static ?string $model = Vehicle::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
-    protected static ?string $navigationGroup = 'Manage';
+    protected static ?string $navigationGroup = 'Operations';
     protected static ?int $navigationSort = 1000;
     public static function form(Form $form): Form
     {

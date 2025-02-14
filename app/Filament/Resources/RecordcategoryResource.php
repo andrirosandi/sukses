@@ -19,8 +19,8 @@ class RecordcategoryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-folder';
 
-    protected static ?string $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 9002;
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?int $navigationSort = 8002;
     public static function getModelLabel(): string
     {
         return 'Record Category'; // Label untuk satu item

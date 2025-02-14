@@ -20,7 +20,7 @@ class ContactResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Manage';
+    protected static ?string $navigationGroup = 'Operations';
     protected static ?int $navigationSort = 1002;
     public static function form(Form $form): Form
     {

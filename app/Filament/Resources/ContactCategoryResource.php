@@ -19,8 +19,8 @@ class ContactCategoryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-at-symbol';
 
-    protected static ?string $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 9003;
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?int $navigationSort = 8003;
     public static function getModelLabel(): string
     {
         return 'Contact Category'; // Label untuk satu item

@@ -14,7 +14,7 @@ class ReminderRecipient extends Model
 
     public function reminder()
     {
-        return $this->belongsTo(Reminder::class);
+        return $this->belongsTo(Reminder::class,'reminder_id');
     }
 
     public function contact()
